@@ -2,9 +2,8 @@ name: Build Carburetor AppImage
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-  workflow_dispatch:
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -31,8 +30,9 @@ jobs:
         tar -xf data.tar.xz
         mkdir -p ../AppDir/usr
         cp -r usr/* ../AppDir/usr/
+
     - name: Copy desktop file and icon
-     run: |
+      run: |
         cp AppDir/usr/share/applications/io.frama.tractor.carburetor.desktop AppDir/
         cp AppDir/usr/share/icons/hicolor/scalable/apps/io.frama.tractor.carburetor.svg AppDir/
 
@@ -60,8 +60,7 @@ jobs:
         name: Carburetor.AppImage
         path: Carburetor*.AppImage
 
-    - name: Release AppImage (optional)
-      if: startsWith(github.ref, 'refs/tags/')
+    - name: Release AppImage
       uses: softprops/action-gh-release@v1
       with:
         files: Carburetor*.AppImage
