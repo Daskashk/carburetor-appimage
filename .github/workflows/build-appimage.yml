@@ -1,0 +1,68 @@
+name: Build Carburetor AppImage
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-25.10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y libfuse2 desktop-file-utils
+
+    - name: Download Carburetor .deb
+      run: |
+        wget https://framagit.org/-/project/67091/uploads/35726bec322917933fa728781c0ece30/carburetor_5.1.1-1_all.deb
+
+    - name: Extract .deb
+      run: |
+        mkdir extract
+        cd extract
+        ar x ../carburetor.deb
+        tar -xf data.tar.xz
+        mkdir -p ../AppDir/usr
+        cp -r usr/* ../AppDir/usr/
+
+    - name: Copy desktop file and icon
+      run: |
+        cp AppDir/usr/share/applications/io.frama.tractor.carburetor.desktop AppDir/
+        cp AppDir/usr/share/icons/hicolor/scalable/apps/carburetor.svg AppDir/
+
+    - name: Create AppRun
+      run: |
+        cat << 'EOF' > AppDir/AppRun
+        #!/bin/sh
+        HERE="$(dirname "$(readlink -f "${0}")")"
+        exec "$HERE/usr/bin/carburetor" "$@"
+        EOF
+        chmod +x AppDir/AppRun
+
+    - name: Download linuxdeploy
+      run: |
+        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O linuxdeploy
+        chmod +x linuxdeploy
+
+    - name: Build AppImage
+      run: |
+        ./linuxdeploy --appdir AppDir --output appimage
+
+    - name: Upload AppImage as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Carburetor.AppImage
+        path: Carburetor*.AppImage
+
+    - name: Release AppImage (optional)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: Carburetor*.AppImage
