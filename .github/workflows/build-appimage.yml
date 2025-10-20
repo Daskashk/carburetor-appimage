@@ -21,7 +21,7 @@ jobs:
 
     - name: Download Carburetor .deb
       run: |
-        wget https://framagit.org/-/project/67091/uploads/35726bec322917933fa728781c0ece30/carburetor_5.1.1-1_all.deb
+        wget https://framagit.org/-/project/67091/uploads/35726bec322917933fa728781c0ece30/carburetor_5.1.1-1_all.deb -O carburetor.deb
 
     - name: Extract .deb
       run: |
