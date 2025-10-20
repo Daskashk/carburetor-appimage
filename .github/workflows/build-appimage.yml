@@ -31,11 +31,10 @@ jobs:
         tar -xf data.tar.xz
         mkdir -p ../AppDir/usr
         cp -r usr/* ../AppDir/usr/
-
     - name: Copy desktop file and icon
-      run: |
+     run: |
         cp AppDir/usr/share/applications/io.frama.tractor.carburetor.desktop AppDir/
-        cp AppDir/usr/share/icons/hicolor/scalable/apps/carburetor.svg AppDir/
+        cp AppDir/usr/share/icons/hicolor/scalable/apps/io.frama.tractor.carburetor.svg AppDir/
 
     - name: Create AppRun
       run: |
