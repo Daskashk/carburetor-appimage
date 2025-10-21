@@ -1,5 +1,8 @@
 name: Build Carburetor AppImage
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
