@@ -55,8 +55,8 @@ jobs:
 
     - name: Download linuxdeploy GTK plugin
       run: |
-        wget https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/releases/download/continuous/linuxdeploy-plugin-gtk.sh -O linuxdeploy-plugin-gtk.sh
-        chmod +x linuxdeploy-plugin-gtk.sh
+        wget https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/releases/download/continuous/linuxdeploy-plugin-gtk-x86_64.AppImage -O linuxdeploy-plugin-gtk
+        chmod +x linuxdeploy-plugin-gtk
 
     - name: Build AppImage with GTK plugin
       run: |
