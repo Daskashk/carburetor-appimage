@@ -19,7 +19,13 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y libfuse2 desktop-file-utils
+        sudo apt install -y \
+          libfuse2 \
+          desktop-file-utils \
+          libgtk-4-dev \
+          libgdk-pixbuf2.0-dev \
+          libglib2.0-dev \
+          pkg-config
 
     - name: Download Carburetor .deb
       run: |
@@ -55,12 +61,13 @@ jobs:
 
     - name: Download linuxdeploy GTK plugin
       run: |
-        wget https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/releases/download/continuous/linuxdeploy-plugin-gtk-x86_64.AppImage -O linuxdeploy-plugin-gtk
+        wget https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh -O linuxdeploy-plugin-gtk
         chmod +x linuxdeploy-plugin-gtk
 
     - name: Build AppImage with GTK plugin
       run: |
-         ARCH=x86_64 ./linuxdeploy --appdir AppDir --plugin gtk --output appimage
+        export LINUXDEPLOY_PLUGIN_GTK_VERSION=4  # Forzar GTK4
+        ARCH=x86_64 ./linuxdeploy --appdir AppDir --plugin gtk --output appimage
 
     - name: Upload AppImage as artifact
       uses: actions/upload-artifact@v4
