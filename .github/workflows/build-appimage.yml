@@ -54,7 +54,7 @@ jobs:
         export GTK_THEME=Adwaita-dark
         export GDK_BACKEND=x11
         export XDG_DATA_DIRS="$HERE/usr/share:$XDG_DATA_DIRS"
-        export GI_TYPELIB_PATH="$HERE/usr/lib/x86_64-linux-gnu/girepository-1.0"
+        export GI_TYPELIB_PATH="$HERE/usr/lib/girepository-1.0"
         
         # Ejecutar la aplicación
         exec "$HERE/usr/bin/carburetor.bin" "$@"
@@ -71,7 +71,15 @@ jobs:
         # Copiar librerías de GTK4 y Adwaita
         mkdir -p AppDir/usr/lib
         cp -r /usr/lib/x86_64-linux-gnu/gtk-4.0 AppDir/usr/lib/
-        cp -r /usr/lib/x86_64-linux-gnu/libadwaita-1 AppDir/usr/lib/
+        cp /usr/lib/x86_64-linux-gnu/libadwaita-1.so* AppDir/usr/lib/
+        
+        # Copiar recursos de libadwaita
+        mkdir -p AppDir/usr/share/libadwaita
+        cp -r /usr/share/libadwaita/* AppDir/usr/share/libadwaita/
+        
+        # Copiar typelibs
+        mkdir -p AppDir/usr/lib/girepository-1.0
+        cp /usr/lib/x86_64-linux-gnu/girepository-1.0/Adw-1.typelib AppDir/usr/lib/girepository-1.0/
         
         # Copiar recursos de iconos y temas
         mkdir -p AppDir/usr/share/icons
