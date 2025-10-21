@@ -26,7 +26,7 @@ jobs:
           libadwaita-1-0 \
           libgdk-pixbuf-2.0-0 \
           libgirepository-1.0-1 \
-          gir1.2-adw-1 \
+          gir1.2-adw-1 \  # Paquete específico para GIR de libadwaita
           gettext \
           appstream-util \
           adwaita-icon-theme-full
@@ -76,31 +76,34 @@ jobs:
         glib-compile-schemas AppDir/usr/share/glib-2.0/schemas
         
         # Copiar librerías de GTK4 y Adwaita
-        mkdir -p AppDir/usr/lib
         mkdir -p AppDir/usr/lib/x86_64-linux-gnu
         cp -r /usr/lib/x86_64-linux-gnu/gtk-4.0 AppDir/usr/lib/x86_64-linux-gnu/
         cp /usr/lib/x86_64-linux-gnu/libadwaita-1.so* AppDir/usr/lib/x86_64-linux-gnu/
         
-        # Copiar archivos GIR (introspectión)
+        # Copiar archivos GIR (introspectión) - ubicación corregida
         mkdir -p AppDir/usr/share/gir-1.0
-        cp /usr/share/gir-1.0/Adw-1.gir AppDir/usr/share/gir-1.0/
+        cp /usr/share/gir-1.0/Adw-1.gir AppDir/usr/share/gir-1.0/ 2>/dev/null || \
+        cp /usr/share/gir-1.0/adw-1.gir AppDir/usr/share/gir-1.0/ 2>/dev/null || true
         
         # Copiar typelibs
         mkdir -p AppDir/usr/lib/girepository-1.0
-        cp /usr/lib/x86_64-linux-gnu/girepository-1.0/Adw-1.typelib AppDir/usr/lib/girepository-1.0/
+        cp /usr/lib/x86_64-linux-gnu/girepository-1.0/Adw-1.typelib AppDir/usr/lib/girepository-1.0/ 2>/dev/null || \
+        cp /usr/lib/x86_64-linux-gnu/girepository-1.0/adw-1.typelib AppDir/usr/lib/girepository-1.0/ 2>/dev/null || true
         
         # Copiar recursos de Adwaita
         mkdir -p AppDir/usr/share/adwaita
-        cp -r /usr/share/adwaita/* AppDir/usr/share/adwaita/
-        cp -r /usr/share/libadwaita-1/* AppDir/usr/share/
+        cp -r /usr/share/adwaita/* AppDir/usr/share/adwaita/ 2>/dev/null || true
+        
+        mkdir -p AppDir/usr/share/libadwaita-1
+        cp -r /usr/share/libadwaita-1/* AppDir/usr/share/libadwaita-1/ 2>/dev/null || true
         
         # Copiar recursos de temas
         mkdir -p AppDir/usr/share/themes
-        cp -r /usr/share/themes/Adwaita* AppDir/usr/share/themes/
+        cp -r /usr/share/themes/Adwaita* AppDir/usr/share/themes/ 2>/dev/null || true
         
         # Copiar recursos de iconos
         mkdir -p AppDir/usr/share/icons
-        cp -r /usr/share/icons/Adwaita* AppDir/usr/share/icons/
+        cp -r /usr/share/icons/Adwaita* AppDir/usr/share/icons/ 2>/dev/null || true
         cp -r /usr/share/icons/hicolor AppDir/usr/share/icons/
 
     - name: Download appimagetool
