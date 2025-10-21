@@ -26,7 +26,8 @@ jobs:
           libadwaita-1-dev \
           libgdk-pixbuf-2.0-dev \
           gettext \
-          appstream-util
+          appstream-util \
+          adwaita-icon-theme-full
 
     - name: Download Carburetor .deb
       run: |
@@ -73,17 +74,21 @@ jobs:
         cp -r /usr/lib/x86_64-linux-gnu/gtk-4.0 AppDir/usr/lib/
         cp /usr/lib/x86_64-linux-gnu/libadwaita-1.so* AppDir/usr/lib/
         
-        # Copiar recursos de libadwaita
-        mkdir -p AppDir/usr/share/libadwaita
-        cp -r /usr/share/libadwaita/* AppDir/usr/share/libadwaita/
+        # Copiar recursos de Adwaita (ubicación correcta)
+        mkdir -p AppDir/usr/share/adwaita
+        cp -r /usr/share/adwaita/* AppDir/usr/share/adwaita/ 2>/dev/null || true
+        
+        # Copiar recursos de temas (ubicación correcta)
+        mkdir -p AppDir/usr/share/themes/Adwaita
+        cp -r /usr/share/themes/Adwaita* AppDir/usr/share/themes/ 2>/dev/null || true
         
         # Copiar typelibs
         mkdir -p AppDir/usr/lib/girepository-1.0
         cp /usr/lib/x86_64-linux-gnu/girepository-1.0/Adw-1.typelib AppDir/usr/lib/girepository-1.0/
         
-        # Copiar recursos de iconos y temas
+        # Copiar recursos de iconos
         mkdir -p AppDir/usr/share/icons
-        cp -r /usr/share/icons/Adwaita AppDir/usr/share/icons/
+        cp -r /usr/share/icons/Adwaita* AppDir/usr/share/icons/ 2>/dev/null || true
         cp -r /usr/share/icons/hicolor AppDir/usr/share/icons/
 
     - name: Download appimagetool
