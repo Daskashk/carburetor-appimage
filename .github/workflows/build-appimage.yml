@@ -27,7 +27,8 @@ jobs:
           libgdk-pixbuf-2.0-dev \
           gettext \
           appstream-util \
-          adwaita-icon-theme-full
+          adwaita-icon-theme-full \
+          libgirepository1.0-dev  # Para archivos GIR
 
     - name: Download Carburetor .deb
       run: |
@@ -56,6 +57,10 @@ jobs:
         export GDK_BACKEND=x11
         export XDG_DATA_DIRS="$HERE/usr/share:$XDG_DATA_DIRS"
         export GI_TYPELIB_PATH="$HERE/usr/lib/girepository-1.0"
+        export LD_LIBRARY_PATH="$HERE/usr/lib:$LD_LIBRARY_PATH"
+        
+        # Configurar ruta para GIR (introspectión)
+        export XDG_DATA_DIRS="$HERE/usr/share:$XDG_DATA_DIRS"
         
         # Ejecutar la aplicación
         exec "$HERE/usr/bin/carburetor.bin" "$@"
@@ -74,17 +79,22 @@ jobs:
         cp -r /usr/lib/x86_64-linux-gnu/gtk-4.0 AppDir/usr/lib/
         cp /usr/lib/x86_64-linux-gnu/libadwaita-1.so* AppDir/usr/lib/
         
-        # Copiar recursos de Adwaita
-        mkdir -p AppDir/usr/share/adwaita
-        cp -r /usr/share/adwaita/* AppDir/usr/share/adwaita/ 2>/dev/null || true
-        
-        # Copiar recursos de temas
-        mkdir -p AppDir/usr/share/themes
-        cp -r /usr/share/themes/Adwaita* AppDir/usr/share/themes/ 2>/dev/null || true
+        # Copiar archivos GIR (introspectión)
+        mkdir -p AppDir/usr/share/gir-1.0
+        cp /usr/share/gir-1.0/Adw-1.gir AppDir/usr/share/gir-1.0/ 2>/dev/null || true
         
         # Copiar typelibs
         mkdir -p AppDir/usr/lib/girepository-1.0
         cp /usr/lib/x86_64-linux-gnu/girepository-1.0/Adw-1.typelib AppDir/usr/lib/girepository-1.0/
+        
+        # Copiar recursos de Adwaita
+        mkdir -p AppDir/usr/share/adwaita
+        cp -r /usr/share/adwaita/* AppDir/usr/share/adwaita/ 2>/dev/null || true
+        cp -r /usr/share/libadwaita-1/* AppDir/usr/share/ 2>/dev/null || true
+        
+        # Copiar recursos de temas
+        mkdir -p AppDir/usr/share/themes
+        cp -r /usr/share/themes/Adwaita* AppDir/usr/share/themes/ 2>/dev/null || true
         
         # Copiar recursos de iconos
         mkdir -p AppDir/usr/share/icons
