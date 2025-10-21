@@ -23,65 +23,84 @@ jobs:
           libfuse2 \
           desktop-file-utils \
           libgtk-4-dev \
+          libadwaita-1-dev \
           libgdk-pixbuf-2.0-dev \
-          libglib2.0-dev \
-          pkg-config \
-          file  # Para el comando 'file'
+          gettext \
+          appstream-util
 
     - name: Download Carburetor .deb
       run: |
         wget https://framagit.org/-/project/67091/uploads/35726bec322917933fa728781c0ece30/carburetor_5.1.1-1_all.deb -O carburetor.deb
 
-    - name: Extract .deb
+    - name: Extract .deb into AppDir
       run: |
-        mkdir extract
-        cd extract
-        ar x ../carburetor.deb
-        tar -xf data.tar.xz
-        mkdir -p ../AppDir/usr
-        cp -r usr/* ../AppDir/usr/
+        mkdir -p AppDir
+        dpkg-deb -x carburetor.deb AppDir
 
-    - name: Copy desktop file and icon
+    - name: Prepare AppDir structure
       run: |
+        mkdir -p AppDir/usr/bin
         cp AppDir/usr/share/applications/io.frama.tractor.carburetor.desktop AppDir/
         cp AppDir/usr/share/icons/hicolor/scalable/apps/io.frama.tractor.carburetor.svg AppDir/
+        mv AppDir/usr/bin/carburetor AppDir/usr/bin/carburetor.bin
 
     - name: Create AppRun
       run: |
         cat << 'EOF' > AppDir/AppRun
         #!/bin/sh
-        HERE="$(dirname "$(readlink -f "${0}")")"
-        exec "$HERE/usr/bin/carburetor" "$@"
+        HERE=$(dirname "$(readlink -f "$0")")
+        
+        # Configuración esencial para GTK4/libadwaita
+        export GTK_THEME=Adwaita-dark
+        export GDK_BACKEND=x11
+        export XDG_DATA_DIRS="$HERE/usr/share:$XDG_DATA_DIRS"
+        export GI_TYPELIB_PATH="$HERE/usr/lib/x86_64-linux-gnu/girepository-1.0"
+        
+        # Ejecutar la aplicación
+        exec "$HERE/usr/bin/carburetor.bin" "$@"
         EOF
         chmod +x AppDir/AppRun
 
-    - name: Download linuxdeploy
+    - name: Bundle GTK resources
       run: |
-        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O linuxdeploy
-        chmod +x linuxdeploy
+        # Copiar schemas de GLib
+        mkdir -p AppDir/usr/share/glib-2.0/schemas
+        cp -r /usr/share/glib-2.0/schemas/* AppDir/usr/share/glib-2.0/schemas/
+        glib-compile-schemas AppDir/usr/share/glib-2.0/schemas
+        
+        # Copiar librerías de GTK4 y Adwaita
+        mkdir -p AppDir/usr/lib
+        cp -r /usr/lib/x86_64-linux-gnu/gtk-4.0 AppDir/usr/lib/
+        cp -r /usr/lib/x86_64-linux-gnu/libadwaita-1 AppDir/usr/lib/
+        
+        # Copiar recursos de iconos y temas
+        mkdir -p AppDir/usr/share/icons
+        cp -r /usr/share/icons/Adwaita AppDir/usr/share/icons/
+        cp -r /usr/share/icons/hicolor AppDir/usr/share/icons/
 
-    - name: Download linuxdeploy GTK plugin
+    - name: Download appimagetool
       run: |
-        wget https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh -O linuxdeploy-plugin-gtk
-        chmod +x linuxdeploy-plugin-gtk
+        wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+        chmod +x appimagetool-x86_64.AppImage
 
-    - name: Verify binaries (opcional)
+    - name: Build AppImage
       run: |
-        # Identificar qué archivos causan el problema
-        find AppDir/usr/bin -type f -exec file {} \; | grep -v "ELF"
+        ./appimagetool-x86_64.AppImage \
+          --comp xz \
+          --no-appstream \
+          AppDir
 
-    - name: Build AppImage with GTK plugin
+    - name: Rename AppImage
       run: |
-        # Forzar GTK4 explícitamente
-        DEPLOY_GTK_VERSION=4 ARCH=x86_64 ./linuxdeploy --appdir AppDir --plugin gtk --output appimage
+        mv Carburetor*.AppImage Carburetor-linux-x86_64.AppImage
 
     - name: Upload AppImage as artifact
       uses: actions/upload-artifact@v4
       with:
         name: Carburetor.AppImage
-        path: Carburetor*.AppImage
+        path: Carburetor-linux-x86_64.AppImage
 
     - name: Release AppImage
       uses: softprops/action-gh-release@v1
       with:
-        files: Carburetor*.AppImage
+        files: Carburetor-linux-x86_64.AppImage
