@@ -51,14 +51,35 @@ jobs:
       run: |
         wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool && chmod +x appimagetool
         ARCH=x86_64 ./appimagetool -n AppDir/
+    release:
+    needs: [build]
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
 
-    - name: Upload AppImage as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: Carburetor.AppImage
-        path: Carburetor-linux-x86_64.AppImage
+    steps:
+      - name: Download AppImage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: AppImage
 
-    - name: Release AppImage
-      uses: softprops/action-gh-release@v1
-      with:
-        files: '*.AppImage*'
+      - name: Delete Previous Release
+        run: |
+          gh release delete "${APP_VERSION}" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || echo "No release to delete"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Continuous universal"
+          tag_name: continuous-universal
+          prerelease: false
+          draft: false
+          generate_release_notes: false
+          make_latest: true
+          files: |
+            *.AppImage*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
