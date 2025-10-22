@@ -44,7 +44,6 @@ AppDir:
       - usr/share/lintian/*
       - usr/share/bash-completion/*
   runtime:
-    env:
     path_mappings:
     - /usr/share/carburetor:$APPDIR/usr/share/carburetor:/usr/share/locale:$APPDIR/usr/share/locale
 
