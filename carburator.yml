@@ -16,7 +16,7 @@ AppDir:
     name: carburator
     icon: carburator
     version: 5.1.1-1
-    exec: bin/python3
+    exec: usr/bin/python3
     exec_args: $APPDIR/usr/bin/carburator $@
 
   apt:
@@ -37,6 +37,7 @@ AppDir:
       - libglib2.0-bin
       - python3-pycountry
       - python3-full
+      - adwaita-icon-full
 
   files:
     exclude:
@@ -44,9 +45,8 @@ AppDir:
       - usr/share/bash-completion/*
   runtime:
     env:
-      path_mappings:
-      - /usr/share/carburetor:$APPDIR/usr/share/carburetor
-      - /usr/share/locale:$APPDIR/usr/share/locale
+    path_mappings:
+    - /usr/share/carburetor:$APPDIR/usr/share/carburetor:/usr/share/locale:$APPDIR/usr/share/locale
 
 AppImage:
   update-information: gh-releases-zsync|lucasmz1|wine_appimage|continuous-stable|wine-stable*.AppImage.zsync
