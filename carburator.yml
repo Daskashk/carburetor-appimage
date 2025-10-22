@@ -7,14 +7,16 @@ script:
   - wget -q https://framagit.org/-/project/67089/uploads/8cf5030f4d7b4b22ef56295febda5736/tractor_5.1.0-1_all.deb -O tractor.deb
   - dpkg-deb -x carburetor.deb ./AppDir
   - dpkg-deb -x tractor.deb ./AppDir
+  - cp io.frama.tractor.carburetor.desktop ./AppDir/
+  - cp io.frama.tractor.carburetor.svg ./AppDir/
 
 AppDir:
   path: ./AppDir
 
   app_info:
-    id: carburator
+    id: io.frama.tractor.carburetor
     name: carburator
-    icon: carburator
+    icon: io.frama.tractor.carburetor
     version: 5.1.1-1
     exec: usr/bin/python3
     exec_args: $APPDIR/usr/bin/carburator $@
@@ -37,6 +39,13 @@ AppDir:
       - libglib2.0-bin
       - python3-pycountry
       - python3-full
+      - python3-fire
+      - python3-gi
+      - python3-socks
+      - python3-stem
+      - bash 
+      - libglib2.0-bin
+      - tor
 
   files:
     exclude:
