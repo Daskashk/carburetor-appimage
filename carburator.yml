@@ -37,7 +37,6 @@ AppDir:
       - libglib2.0-bin
       - python3-pycountry
       - python3-full
-      - adwaita-icon-full
 
   files:
     exclude:
