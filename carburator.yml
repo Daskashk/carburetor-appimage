@@ -36,9 +36,7 @@ AppDir:
       - gir1.2-gtk-4.0
       - libglib2.0-bin
       - python3-pycountry
-      - tractor
-      - carburator
-      - pytohn3-full
+      - python3-full
 
   files:
     exclude:
@@ -47,7 +45,8 @@ AppDir:
   runtime:
     env:
       path_mappings:
-      - /usr/share/carburetor:$APPDIR/usr/share/carburetor:/usr/share/locale:$APPDIR/usr/share/locale
+      - /usr/share/carburetor:$APPDIR/usr/share/carburetor
+      - /usr/share/locale:$APPDIR/usr/share/locale
 
 AppImage:
   update-information: gh-releases-zsync|lucasmz1|wine_appimage|continuous-stable|wine-stable*.AppImage.zsync
