@@ -35,105 +35,17 @@ jobs:
           adwaita-icon-theme-full \
           appstream-util
 
-    - name: Download Carburetor and Tractor .deb packages
+    - name: Download appimage-builder
       run: |
-        wget https://framagit.org/-/project/67091/uploads/35726bec322917933fa728781c0ece30/carburetor_5.1.1-1_all.deb -O carburetor.deb
-        wget https://framagit.org/-/project/67089/uploads/8cf5030f4d7b4b22ef56295febda5736/tractor_5.1.0-1_all.deb -O tractor.deb
+        wget -q https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage -O appimagebuilder && chmod +x appimagebuilder
+        ./appimagebuilder --recipe carburator.yml --skip-appimage
 
-    - name: Extract packages into AppDir
+    - name: Pack AppImage
       run: |
-        mkdir -p AppDir
-        dpkg-deb -x carburetor.deb AppDir
-        dpkg-deb -x tractor.deb AppDir
-
-    - name: Prepare AppDir structure
-      run: |
-        mkdir -p AppDir/usr/bin
-        mv AppDir/usr/bin/carburetor AppDir/usr/bin/carburetor.bin
-        mv AppDir/usr/bin/tractor AppDir/usr/bin/tractor.bin
-        ln -s carburetor.bin AppDir/usr/bin/carburetor
-        
-        # Copiar recursos críticos de Carburetor
-        mkdir -p AppDir/usr/share/carburetor
-        cp -r AppDir/usr/share/carburetor/* AppDir/usr/share/carburetor/
-        
-        # Mover .desktop e icono
-        cp AppDir/usr/share/applications/io.frama.tractor.carburetor.desktop AppDir/
-        cp AppDir/usr/share/icons/hicolor/scalable/apps/io.frama.tractor.carburetor.svg AppDir/
-
-    - name: Create AppRun with environment setup
-      run: |
-        cat << 'EOF' > AppDir/AppRun
-        #!/bin/sh
-        HERE=$(dirname "$(readlink -f "$0")")
-        
-        # Configuración esencial para GTK4/libadwaita
-        export GTK_THEME=Adwaita-dark
-        export GDK_BACKEND=x11
-        export XDG_DATA_DIRS="$HERE/usr/share:${XDG_DATA_DIRS:-/usr/share}"
-        export GI_TYPELIB_PATH="$HERE/usr/lib/girepository-1.0"
-        export LD_LIBRARY_PATH="$HERE/usr/lib:$HERE/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
-        export PATH="$HERE/usr/bin:$PATH"
-        export GSETTINGS_SCHEMA_DIR="$HERE/usr/share/glib-2.0/schemas"
-        
-        # Configurar ruta específica para recursos de Carburetor
-        export CARBURETOR_RESOURCE_PATH="$HERE/usr/share/carburetor"
-        
-        # Ejecutar la aplicación
-        exec carburetor "$@"
-        EOF
-        chmod +x AppDir/AppRun
-
-    - name: Bundle GTK resources
-      run: |
-        # Copiar schemas de GLib
-        mkdir -p AppDir/usr/share/glib-2.0/schemas
-        cp -r /usr/share/glib-2.0/schemas/* AppDir/usr/share/glib-2.0/schemas/
-        glib-compile-schemas AppDir/usr/share/glib-2.0/schemas
-        
-        # Copiar librerías de GTK4 y Adwaita
-        mkdir -p AppDir/usr/lib/x86_64-linux-gnu
-        cp /usr/lib/x86_64-linux-gnu/libgtk-4.so* AppDir/usr/lib/x86_64-linux-gnu/
-        cp /usr/lib/x86_64-linux-gnu/libadwaita-1.so* AppDir/usr/lib/x86_64-linux-gnu/
-        
-        # Copiar typelibs
-        mkdir -p AppDir/usr/lib/girepository-1.0
-        cp /usr/lib/x86_64-linux-gnu/girepository-1.0/Adw-1.typelib AppDir/usr/lib/girepository-1.0/
-        cp /usr/lib/x86_64-linux-gnu/girepository-1.0/Gtk-4.0.typelib AppDir/usr/lib/girepository-1.0/
-        
-        # Copiar recursos de Adwaita
-        mkdir -p AppDir/usr/share/adwaita
-        cp -r /usr/share/adwaita/* AppDir/usr/share/adwaita/ 2>/dev/null || true
-        
-        # Copiar recursos de iconos
-        mkdir -p AppDir/usr/share/icons
-        cp -r /usr/share/icons/Adwaita* AppDir/usr/share/icons/ 2>/dev/null || true
-        cp -r /usr/share/icons/hicolor AppDir/usr/share/icons/
-
-    - name: Verify resource file
-      run: |
-        echo "=== Verificación de carburetor.gresource ==="
-        if [ -f "AppDir/usr/share/carburetor/carburetor.gresource" ]; then
-          echo "carburetor.gresource encontrado ✅"
-        else
-          echo "ERROR: carburetor.gresource no encontrado ❌"
-          echo "Contenido de AppDir/usr/share/carburetor:"
-          ls -l AppDir/usr/share/carburetor
-          exit 1
-        fi
-
-    - name: Download appimagetool
-      run: |
-        wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
-        chmod +x appimagetool
-
-    - name: Build AppImage
-      run: |
-        file --version
-        ARCH=x86_64 ./appimagetool \
-          --comp xz \
-          AppDir \
-          Carburetor-linux-x86_64.AppImage
+        wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool && chmod +x appimagetool
+        cp io.frama.tractor.carburetor.desktop ./AppDir/
+        cp io.frama.tractor.carburetor.svg ./AppDir/
+        ARCH=x86_64 ./appimagetool -n AppDir/
 
     - name: Upload AppImage as artifact
       uses: actions/upload-artifact@v4
@@ -144,4 +56,4 @@ jobs:
     - name: Release AppImage
       uses: softprops/action-gh-release@v1
       with:
-        files: Carburetor-linux-x86_64.AppImage
+        files: '*.AppImage*'
