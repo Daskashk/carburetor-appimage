@@ -48,6 +48,7 @@ AppDir:
       - tor
       - libadwaita-1-dev
       - gir1.2-adw-1
+      - libgtk-4-1
 
   files:
     exclude:
