@@ -52,6 +52,12 @@ jobs:
         mv AppDir/usr/bin/carburetor AppDir/usr/bin/carburetor.bin
         mv AppDir/usr/bin/tractor AppDir/usr/bin/tractor.bin
         ln -s carburetor.bin AppDir/usr/bin/carburetor
+        
+        # Copiar recursos críticos de Carburetor
+        mkdir -p AppDir/usr/share/carburetor
+        cp -r AppDir/usr/share/carburetor/* AppDir/usr/share/carburetor/
+        
+        # Mover .desktop e icono
         cp AppDir/usr/share/applications/io.frama.tractor.carburetor.desktop AppDir/
         cp AppDir/usr/share/icons/hicolor/scalable/apps/io.frama.tractor.carburetor.svg AppDir/
 
@@ -61,6 +67,7 @@ jobs:
         #!/bin/sh
         HERE=$(dirname "$(readlink -f "$0")")
         
+        # Configuración esencial para GTK4/libadwaita
         export GTK_THEME=Adwaita-dark
         export GDK_BACKEND=x11
         export XDG_DATA_DIRS="$HERE/usr/share:${XDG_DATA_DIRS:-/usr/share}"
@@ -69,33 +76,51 @@ jobs:
         export PATH="$HERE/usr/bin:$PATH"
         export GSETTINGS_SCHEMA_DIR="$HERE/usr/share/glib-2.0/schemas"
         
+        # Configurar ruta específica para recursos de Carburetor
+        export CARBURETOR_RESOURCE_PATH="$HERE/usr/share/carburetor"
+        
+        # Ejecutar la aplicación
         exec carburetor "$@"
         EOF
         chmod +x AppDir/AppRun
 
-    - name: Bundle critical GTK resources
+    - name: Bundle GTK resources
       run: |
-        mkdir -p AppDir/usr/lib/x86_64-linux-gnu
-        mkdir -p AppDir/usr/share/gir-1.0
-        mkdir -p AppDir/usr/lib/girepository-1.0
+        # Copiar schemas de GLib
+        mkdir -p AppDir/usr/share/glib-2.0/schemas
+        cp -r /usr/share/glib-2.0/schemas/* AppDir/usr/share/glib-2.0/schemas/
+        glib-compile-schemas AppDir/usr/share/glib-2.0/schemas
         
+        # Copiar librerías de GTK4 y Adwaita
+        mkdir -p AppDir/usr/lib/x86_64-linux-gnu
         cp /usr/lib/x86_64-linux-gnu/libgtk-4.so* AppDir/usr/lib/x86_64-linux-gnu/
         cp /usr/lib/x86_64-linux-gnu/libadwaita-1.so* AppDir/usr/lib/x86_64-linux-gnu/
-        cp /usr/lib/x86_64-linux-gnu/libgirepository-1.0.so* AppDir/usr/lib/x86_64-linux-gnu/
         
+        # Copiar typelibs
+        mkdir -p AppDir/usr/lib/girepository-1.0
         cp /usr/lib/x86_64-linux-gnu/girepository-1.0/Adw-1.typelib AppDir/usr/lib/girepository-1.0/
         cp /usr/lib/x86_64-linux-gnu/girepository-1.0/Gtk-4.0.typelib AppDir/usr/lib/girepository-1.0/
         
-        mkdir -p AppDir/usr/share/glib-2.0/schemas
-        cp /usr/share/glib-2.0/schemas/*.gschema.xml AppDir/usr/share/glib-2.0/schemas/
-        glib-compile-schemas AppDir/usr/share/glib-2.0/schemas
-        
+        # Copiar recursos de Adwaita
         mkdir -p AppDir/usr/share/adwaita
         cp -r /usr/share/adwaita/* AppDir/usr/share/adwaita/ 2>/dev/null || true
         
+        # Copiar recursos de iconos
         mkdir -p AppDir/usr/share/icons
         cp -r /usr/share/icons/Adwaita* AppDir/usr/share/icons/ 2>/dev/null || true
         cp -r /usr/share/icons/hicolor AppDir/usr/share/icons/
+
+    - name: Verify resource file
+      run: |
+        echo "=== Verificación de carburetor.gresource ==="
+        if [ -f "AppDir/usr/share/carburetor/carburetor.gresource" ]; then
+          echo "carburetor.gresource encontrado ✅"
+        else
+          echo "ERROR: carburetor.gresource no encontrado ❌"
+          echo "Contenido de AppDir/usr/share/carburetor:"
+          ls -l AppDir/usr/share/carburetor
+          exit 1
+        fi
 
     - name: Download appimagetool
       run: |
