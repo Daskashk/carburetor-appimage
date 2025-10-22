@@ -1,25 +1,31 @@
 name: Build Carburetor AppImage
-
-permissions:
-  contents: write
-
+# Controls when the action will run.
 on:
+  # Build at 00:00 every 6th day
+  schedule:
+    - cron: "0 0 */6 * *"
+  # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    tags:
-      - 'v*'
+    branches: [ main ]
+    paths-ignore: [ '**/README.md' ]
+  pull_request:
+    branches: [ main ]
+    paths-ignore: [ '**/README.md' ]
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:22.04
-      options: --privileged
-
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v4
     - name: Install system dependencies
       run: |
-        apt-get update
-        apt-get install -y \
+        
+        sudo apt-get install -y \
           wget \
           file \
           desktop-file-utils \
