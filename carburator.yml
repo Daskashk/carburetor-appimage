@@ -44,9 +44,10 @@ AppDir:
     exclude:
       - usr/share/lintian/*
       - usr/share/bash-completion/*
-
-    path_mappings:
-    - /usr/share/carburetor:$APPDIR/usr/share/carburetor:/usr/share/locale:$APPDIR/usr/share/locale
+  runtime:
+    env:
+      path_mappings:
+      - /usr/share/carburetor:$APPDIR/usr/share/carburetor:/usr/share/locale:$APPDIR/usr/share/locale
 
 AppImage:
   update-information: gh-releases-zsync|lucasmz1|wine_appimage|continuous-stable|wine-stable*.AppImage.zsync
