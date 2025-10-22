@@ -46,6 +46,8 @@ AppDir:
       - bash 
       - libglib2.0-bin
       - tor
+      - libadwaita-1-dev
+      - gir1.2-adw-1
 
   files:
     exclude:
