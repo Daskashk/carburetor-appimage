@@ -1,6 +1,7 @@
 version: 1
 
 script:
+  - mkdir ./AppDir/
   - cp io.frama.tractor.carburetor.desktop ./AppDir/
   - cp io.frama.tractor.carburetor.svg ./AppDir/
 
