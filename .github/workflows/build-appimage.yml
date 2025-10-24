@@ -50,7 +50,7 @@ jobs:
 
     - name: Download rootfs and setup some stuff
       run: |
-        ./download_latest_debian_bootstrap.sh
+        chmod a+x download_latest_debian_bootstrap.sh && ./download_latest_debian_bootstrap.sh
         mkdir root
         mkdir arch
         sudo tar xf rootfs-latest.tar.xz -C ./root/
