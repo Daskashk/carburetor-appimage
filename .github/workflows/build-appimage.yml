@@ -56,11 +56,11 @@ jobs:
         mkdir arch
         sudo tar xf archlinux-bootstrap-x86_64.tar.zst -C ./arch/
         # criar no github uma nova pasta parao AppRun e demais arquivos.
-        cp /etc/resolv.conf -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/ && cp ${GITHUB_WORKSPACE}/files/mirrorlist -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/pacman.d/ && cp ${GITHUB_WORKSPACE}/files/pacman.conf -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/
+        sudo cp /etc/resolv.conf -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/ && sudo cp ${GITHUB_WORKSPACE}/files/mirrorlist -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/pacman.d/ && sudo cp ${GITHUB_WORKSPACE}/files/pacman.conf -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/
         cd ${GITHUB_WORKSPACE}
         sudo chroot ./arch/root.x86_64/ /usr/bin/bash -c "pacman -Syyu --noconfirm && pacman -S carburetor tractor gsettings-desktop-schemas adwaita-icon-theme gnome-icon-theme --noconfirm && pacman -Scc --noconfirm && rm -rf /var/cache/pacman/pkg/* && sed -i '18,516 s/^#//' /etc/locale.gen && locale-gen"
-        cp ${GITHUB_WORKSPACE}/files/AppRun ${GITHUB_WORKSPACE}/arch/ && chmod a+x ${GITHUB_WORKSPACE}/arch/AppRun && cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg -t ${GITHUB_WORKSPACE}/arch/ && cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop -t ${GITHUB_WORKSPACE}/arch/ && cp ${GITHUB_WORKSPACE}/files/proot -t ${GITHUB_WORKSPACE}/arch/ && chmod a+x -t ${GITHUB_WORKSPACE}/arch/proot
-        mv ${GITHUB_WORKSPACE}/arch/root.x86_64/  ${GITHUB_WORKSPACE}/arch/root/
+        sudo cp ${GITHUB_WORKSPACE}/files/AppRun ${GITHUB_WORKSPACE}/arch/ && sudo chmod a+x ${GITHUB_WORKSPACE}/arch/AppRun && sudo cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg -t ${GITHUB_WORKSPACE}/arch/ && sudo cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop -t ${GITHUB_WORKSPACE}/arch/ && sudo cp ${GITHUB_WORKSPACE}/files/proot -t ${GITHUB_WORKSPACE}/arch/ && sudo chmod a+x -t ${GITHUB_WORKSPACE}/arch/proot
+        sudo mv ${GITHUB_WORKSPACE}/arch/root.x86_64/  ${GITHUB_WORKSPACE}/arch/root/
 
     - name: Pack AppImage
       run: |
