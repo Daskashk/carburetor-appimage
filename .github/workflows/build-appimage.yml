@@ -50,20 +50,20 @@ jobs:
 
     - name: Download rootfs and setup some stuff
       run: |
-        chmod a+x download_latest_debian_bootstrap.sh \
-        ./download_latest_debian_bootstrap.sh \
-        mkdir app \
-        mkdir arch \
-        tar xf rootfs-latest.tar.xz -C ./app/ \
-        mv ./app/ arch/ \
-        chmod a+x mount.sh \
-        cp mount.sh ./arch/ \
-        sudo ./arch/mount.sh \
-        cp ${GITHUB_WORKSPACE}/files/AppRun ${GITHUB_WORKSPACE}/arch/ \
-        chmod a+x ${GITHUB_WORKSPACE}/arch/AppRun \
-        cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg -t ${GITHUB_WORKSPACE}/arch/ \
-        cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop -t ${GITHUB_WORKSPACE}/arch/ \
-        cp ${GITHUB_WORKSPACE}/files/proot -t ${GITHUB_WORKSPACE}/arch/ \
+        chmod a+x download_latest_debian_bootstrap.sh
+        ./download_latest_debian_bootstrap.sh
+        mkdir app
+        mkdir arch
+        tar xf rootfs-latest.tar.xz -C ./app/
+        mv ./app/ arch/
+        chmod a+x mount.sh
+        cp mount.sh ./arch/
+        sudo ./arch/mount.sh
+        cp ${GITHUB_WORKSPACE}/files/AppRun ${GITHUB_WORKSPACE}/arch/
+        chmod a+x ${GITHUB_WORKSPACE}/arch/AppRun
+        cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg -t ${GITHUB_WORKSPACE}/arch/
+        cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop -t ${GITHUB_WORKSPACE}/arch/
+        cp ${GITHUB_WORKSPACE}/files/proot -t ${GITHUB_WORKSPACE}/arch/
         chmod a+x -t ${GITHUB_WORKSPACE}/arch/proot
 
     - name: Pack AppImage
