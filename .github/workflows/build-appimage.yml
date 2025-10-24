@@ -59,12 +59,13 @@ jobs:
         mv ./app/ arch/
         cp mount.sh ./arch/
         chmod +x ./arch/mount.sh
-        ./arch/mount.sh
+        cd ./arch
+        ./mount.sh
         cp ${GITHUB_WORKSPACE}/files/AppRun ${GITHUB_WORKSPACE}/arch/
         chmod +x ${GITHUB_WORKSPACE}/arch/AppRun
-        cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg -t ${GITHUB_WORKSPACE}/arch/
-        cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop -t ${GITHUB_WORKSPACE}/arch/
-        cp ${GITHUB_WORKSPACE}/files/proot -t ${GITHUB_WORKSPACE}/arch/
+        cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg ${GITHUB_WORKSPACE}/arch/
+        cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop ${GITHUB_WORKSPACE}/arch/
+        cp ${GITHUB_WORKSPACE}/files/proot ${GITHUB_WORKSPACE}/arch/
         chmod +x ${GITHUB_WORKSPACE}/arch/proot
 
     - name: Pack AppImage
