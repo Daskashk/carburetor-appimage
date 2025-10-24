@@ -56,7 +56,7 @@ jobs:
         tar xf rootfs-latest.tar.xz -C ./root/
         mv ./root/ arch/
         cd ${GITHUB_WORKSPACE}
-        chmod a+x mount.sh && cp mount.sh ./arch/ && sudo ./mount.sh
+        chmod a+x mount.sh && cp mount.sh ./arch/ && sudo ./arch/mount.sh
         cp ${GITHUB_WORKSPACE}/files/AppRun ${GITHUB_WORKSPACE}/arch/ && chmod a+x ${GITHUB_WORKSPACE}/arch/AppRun && cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg -t ${GITHUB_WORKSPACE}/arch/ && cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop -t ${GITHUB_WORKSPACE}/arch/ && cp ${GITHUB_WORKSPACE}/files/proot -t ${GITHUB_WORKSPACE}/arch/ && chmod a+x -t ${GITHUB_WORKSPACE}/arch/proot
 
     - name: Pack AppImage
