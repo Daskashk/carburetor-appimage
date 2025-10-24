@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CHROOT_DIR="./root"
+CHROOT_DIR="./app"
 
 # Função para desmontar os diretórios
 cleanup() {
