@@ -50,6 +50,7 @@ jobs:
 
     - name: Download rootfs and setup some stuff
       run: |
+        set -eux
         chmod +x download_latest_debian_bootstrap.sh
         ./download_latest_debian_bootstrap.sh
         mkdir app
@@ -58,7 +59,7 @@ jobs:
         mv ./app/ arch/
         cp mount.sh ./arch/
         chmod +x ./arch/mount.sh
-        sudo ./arch/mount.sh
+        ./arch/mount.sh
         cp ${GITHUB_WORKSPACE}/files/AppRun ${GITHUB_WORKSPACE}/arch/
         chmod +x ${GITHUB_WORKSPACE}/arch/AppRun
         cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg -t ${GITHUB_WORKSPACE}/arch/
