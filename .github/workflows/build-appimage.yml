@@ -50,17 +50,14 @@ jobs:
 
     - name: Download rootfs and setup some stuff
       run: |
-        wget -c "https://archive.archlinux.org/iso/"
-        cat index.html | tail -n 3 | awk '{print $2}' | cut -d "/" -f 1 | cut -d "\"" -f 2 | xargs -i -t -exec wget -q -r --no-parent -np -l 1 -A "*.zst" -erobots=off -P . "https://archive.archlinux.org/iso/{}/archlinux-bootstrap-x86_64.tar.zst"
-        find ${GITHUB_WORKSPACE} -name '*.zst' | xargs -i -t -exec mv {} ${GITHUB_WORKSPACE}
+        ./download_latest_debian_bootstrap.sh
+        mkdir root
         mkdir arch
-        sudo tar xf archlinux-bootstrap-x86_64.tar.zst -C ./arch/
-        # criar no github uma nova pasta parao AppRun e demais arquivos.
-        sudo cp /etc/resolv.conf -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/ && sudo cp ${GITHUB_WORKSPACE}/files/mirrorlist -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/pacman.d/ && sudo cp ${GITHUB_WORKSPACE}/files/pacman.conf -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/
+        sudo tar xf rootfs-latest.tar.xz -C ./root/
+        mv ./root/ arch/
         cd ${GITHUB_WORKSPACE}
-        sudo chroot ./arch/root.x86_64/ /usr/bin/bash -c "pacman -Syyu --noconfirm && pacman -S carburetor tractor gsettings-desktop-schemas adwaita-icon-theme gnome-icon-theme --noconfirm && pacman -Scc --noconfirm && rm -rf /var/cache/pacman/pkg/* && sed -i '18,516 s/^#//' /etc/locale.gen && locale-gen"
-        sudo cp ${GITHUB_WORKSPACE}/files/AppRun ${GITHUB_WORKSPACE}/arch/ && sudo chmod a+x ${GITHUB_WORKSPACE}/arch/AppRun && sudo cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg -t ${GITHUB_WORKSPACE}/arch/ && sudo cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop -t ${GITHUB_WORKSPACE}/arch/ && sudo cp ${GITHUB_WORKSPACE}/files/proot -t ${GITHUB_WORKSPACE}/arch/ && sudo chmod a+x -t ${GITHUB_WORKSPACE}/arch/proot
-        sudo mv ${GITHUB_WORKSPACE}/arch/root.x86_64/  ${GITHUB_WORKSPACE}/arch/root/
+        sudo chroot ./arch/root/ /usr/bin/bash -c "apt update && apt upgrade -y && apt install -y --no-recommends wget curl gsettings-desktop-schemas adwaita-icon-theme adwaita-icon-theme-legacy gnome-icon-theme locales && curl -C - -L -O "https://framagit.org/-/project/67091/uploads/35726bec322917933fa728781c0ece30/carburetor_5.1.1-1_all.deb" && dpkg -i *.deb && apt install -f -y && apt clean && apt autoclean && sed -i '7,515 s/^#//' /etc/locale.gen && locale-gen"
+        cp ${GITHUB_WORKSPACE}/files/AppRun ${GITHUB_WORKSPACE}/arch/ && chmod a+x ${GITHUB_WORKSPACE}/arch/AppRun && cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg -t ${GITHUB_WORKSPACE}/arch/ && cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop -t ${GITHUB_WORKSPACE}/arch/ && cp ${GITHUB_WORKSPACE}/files/proot -t ${GITHUB_WORKSPACE}/arch/ && chmod a+x -t ${GITHUB_WORKSPACE}/arch/proot
 
     - name: Pack AppImage
       run: |
