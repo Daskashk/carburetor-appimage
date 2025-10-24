@@ -1,0 +1,6 @@
+#!/bin/bash
+
+SELF=$(readlink -f "$0")
+HERE=${SELF%/*}
+
+exec "$HERE/proot" --kill-on-exit -R "$HERE/root" /usr/bin/python3.12 /usr/bin/carburetor "$@"
