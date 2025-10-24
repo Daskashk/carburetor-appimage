@@ -39,18 +39,31 @@ jobs:
           libglib2.0-bin \
           python3-pycountry \
           adwaita-icon-theme-full \
-          appstream-util
+          appstream-util \
+          debootstrap \
+          schroot \
+          bubblewrap \
+          autoconf \
+          coreutils
 
-    - name: Download appimage-builder
+    - name: Download rootfs and setup some stuff
       run: |
-        echo $PATH
-        wget -q https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage -O appimagebuilder && chmod +x appimagebuilder
-        ./appimagebuilder --recipe carburator.yml --skip-appimage
+        wget -c "https://archive.archlinux.org/iso/"
+        cat index.html | tail -n 3 | awk '{print $2}' | cut -d "/" -f 1 | cut -d "\"" -f 2 | xargs -i -t -exec wget -r --no-parent np -l 1 -A "*.zst" -erobots=off -P . "https://archive.archlinux.org/iso/{}/archlinux-bootstrap-x86_64.tar.zst"
+        find ${GITHUB_WORKSPACE} -name '*.zst' | xargs -i -t -exec mv {} ${GITHUB_WORKSPACE}
+        mkdir arch
+        tar xf archlinux-bootstrap-x86_64.tar.zst -C ./arch/
+        # criar no github uma nova pasta parao AppRun e demais arquivos.
+        cp /etc/resolv.conf -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/ && cp ${GITHUB_WORKSPACE}/files/mirrorlist -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/pacman.d/ && cp ${GITHUB_WORKSPACE}/files/pacman.conf -t ${GITHUB_WORKSPACE}/arch/root.x86_64/etc/
+        cd ${GITHUB_WORKSPACE}
+        sudo chroot ./arch/root.x86_64/ /usr/bin/bash -c "pacman -Syyu --noconfirm && pacman -S carburetor tractor gsettings-desktop-schemas adwaita-icon-theme gnome-icon-theme --noconfirm && pacman -Scc --noconfirm && rm -rf /var/cache/pacman/pkg/* && sed -i '18,516 s/^#//' /etc/locale.gen && locale-gen"
+        cp ${GITHUB_WORKSPACE}/files/AppRun ${GITHUB_WORKSPACE}/arch/ && chmod a+x ${GITHUB_WORKSPACE}/arch/AppRun && cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg -t ${GITHUB_WORKSPACE}/arch/ && cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop -t ${GITHUB_WORKSPACE}/arch/ && cp ${GITHUB_WORKSPACE}/files/proot -t ${GITHUB_WORKSPACE}/arch/ && chmod a+x -t ${GITHUB_WORKSPACE}/arch/proot
+        mv ${GITHUB_WORKSPACE}/arch/root.x86_64/  ${GITHUB_WORKSPACE}/arch/root/
 
     - name: Pack AppImage
       run: |
         wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool && chmod +x appimagetool
-        ARCH=x86_64 ./appimagetool -n AppDir/
+        ARCH=x86_64 ./appimagetool -n ${GITHUB_WORKSPACE}/arch/root/
 
     - name: Delete Previous Release
       run: |
