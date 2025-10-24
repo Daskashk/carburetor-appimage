@@ -65,7 +65,7 @@ jobs:
         cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg -t ${GITHUB_WORKSPACE}/arch/
         cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop -t ${GITHUB_WORKSPACE}/arch/
         cp ${GITHUB_WORKSPACE}/files/proot -t ${GITHUB_WORKSPACE}/arch/
-        chmod +x -t ${GITHUB_WORKSPACE}/arch/proot
+        chmod +x ${GITHUB_WORKSPACE}/arch/proot
 
     - name: Pack AppImage
       run: |
