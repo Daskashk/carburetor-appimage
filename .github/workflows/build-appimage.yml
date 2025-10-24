@@ -50,7 +50,6 @@ jobs:
 
     - name: Download rootfs and setup some stuff
       run: |
-        set -eux
         chmod +x download_latest_debian_bootstrap.sh
         ./download_latest_debian_bootstrap.sh
         mkdir app
