@@ -3,4 +3,4 @@
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
 
-exec "$HERE/proot" --kill-on-exit -R "$HERE/app" /usr/bin/python3 /usr/bin/carburetor "$@"
+exec "$HERE/proot" -R "$HERE/app" -b /usr/share/icons:/usr/share/icons -b /usr/share/fonts:/usr/share/fonts /usr/bin/python3 /usr/bin/carburetor "$@"
