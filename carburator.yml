@@ -1,0 +1,61 @@
+version: 1
+
+script:
+  - mkdir ./AppDir/
+  - cp io.frama.tractor.carburetor.desktop ./AppDir/
+  - cp io.frama.tractor.carburetor.svg ./AppDir/
+
+AppDir:
+  path: ./AppDir
+
+  app_info:
+    id: io.frama.tractor.carburetor
+    name: carburator
+    icon: io.frama.tractor.carburetor
+    version: 5.1.1-1
+    exec: usr/bin/python3
+    exec_args: $APPDIR/usr/bin/carburator $@
+
+  apt:
+    arch: [amd64]
+    sources:
+      - sourceline: 'deb [trusted=yes] http://archive.ubuntu.com/ubuntu/ noble main restricted universe multiverse'
+      - sourceline: 'deb [trusted=yes] http://archive.ubuntu.com/ubuntu/ noble-security main restricted universe multiverse'
+      - sourceline: 'deb [trusted=yes] http://archive.ubuntu.com/ubuntu/ noble-updates main restricted universe multiverse'
+      - sourceline: 'deb [trusted=yes] http://archive.ubuntu.com/ubuntu/ noble-proposed main restricted universe multiverse'
+      - sourceline: 'deb [trusted=yes] http://archive.ubuntu.com/ubuntu/ noble-backports main restricted universe multiverse'
+
+    include:
+      - dconf-gsettings-backend
+      - gsettings-backend
+      - python3
+      - gir1.2-adw-1
+      - gir1.2-gtk-4.0
+      - libglib2.0-bin
+      - python3-pycountry
+      - python3-full
+      - python3-fire
+      - python3-gi
+      - python3-socks
+      - python3-stem
+      - bash 
+      - libglib2.0-bin
+      - tor
+      - libadwaita-1-dev
+      - gir1.2-adw-1
+      - libgtk-4-1
+      - carburetor
+      - tractor
+
+  files:
+    exclude:
+      - usr/share/lintian/*
+      - usr/share/bash-completion/*
+  runtime:
+    path_mappings:
+    - /usr/share/carburetor:$APPDIR/usr/share/carburetor:/usr/share/locale:$APPDIR/usr/share/locale
+
+AppImage:
+  update-information: gh-releases-zsync|lucasmz1|wine_appimage|continuous-stable|wine-stable*.AppImage.zsync
+  #sign-key: None
+  arch: x86_64
