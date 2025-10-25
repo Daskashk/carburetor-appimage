@@ -25,7 +25,7 @@ echo "Diretórios montados com sucesso."
 
 # Entra no chroot
 echo "Entrando no chroot..."
-sudo chroot "$CHROOT_DIR" /usr/bin/bash -c "apt update && apt upgrade -y && apt install wget curl -y && curl -C - -L -O -o carburetor.deb https://framagit.org/-/project/67091/uploads/35726bec322917933fa728781c0ece30/carburetor_5.1.1-1_all.deb && apt install ./carburetor.deb -f -y && apt install -y wget curl gsettings-desktop-schemas adwaita-icon-theme adwaita-icon-theme-legacy gnome-icon-theme locales && apt clean && apt autoclean && sed -i '7,515 s/^#//' /etc/locale.gen && locale-gen && exit"
+sudo chroot "$CHROOT_DIR" /usr/bin/bash -c "apt update && apt upgrade -y && apt install wget curl -y && curl -C - -L -O https://framagit.org/-/project/67091/uploads/35726bec322917933fa728781c0ece30/carburetor_5.1.1-1_all.deb && dpkg -i *.deb || true && apt install -f -y && apt install -y wget curl gsettings-desktop-schemas adwaita-icon-theme adwaita-icon-theme-legacy gnome-icon-theme locales && apt clean && apt autoclean && sed -i '7,515 s/^#//' /etc/locale.gen && locale-gen && exit"
 
 # Mensagem ao sair do chroot
 echo "Saindo do chroot..."
