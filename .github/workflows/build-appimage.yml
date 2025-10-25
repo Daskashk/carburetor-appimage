@@ -1,3 +1,6 @@
+permissions:
+  contents: write      # Necesario para crear releases y subir assets
+  packages: write
 name: Build Carburetor AppImage
 # Controls when the action will run.
 on:
