@@ -64,8 +64,10 @@ jobs:
         chmod +x ${GITHUB_WORKSPACE}/arch/AppRun
         cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg ${GITHUB_WORKSPACE}/arch/
         cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop ${GITHUB_WORKSPACE}/arch/
-        cp ${GITHUB_WORKSPACE}/files/proot ${GITHUB_WORKSPACE}/arch/
-        chmod +x ${GITHUB_WORKSPACE}/arch/proot
+        curl -C - -L -O "https://github.com/lucasmz1/bubblewrap-musl-static/releases/download/7f9bc5f/bwrap-x86_64"
+        mv bwrap-x86_64 bwrap
+        chmod +x bwrap
+        cp bwrap ${GITHUB_WORKSPACE}/arch/
 
     - name: Pack AppImage
       run: |
