@@ -65,7 +65,6 @@ jobs:
         cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg ${GITHUB_WORKSPACE}/arch/
         cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop ${GITHUB_WORKSPACE}/arch/
         wget -q "https://github.com/lucasmz1/bubblewrap-musl-static/releases/download/7f9bc5f/bwrap-x86_64" -O bwrap
-        mv bwrap ${GITHUB_WORKSPACE}/arch/
         chmod +x ${GITHUB_WORKSPACE}/arch/bwrap
 
     - name: Pack AppImage
