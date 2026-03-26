@@ -1,4 +1,4 @@
-name: Build Carburetor AppImage (Fixed)
+name: Build Carburetor AppImage (Fixed Keys)
 
 on:
   push:
@@ -42,8 +42,12 @@ jobs:
             apt:
               arch: amd64
               sources:
+                # Importamos la clave actual (Debian 12/Bookworm Archive Key)
                 - sourceline: 'deb [arch=amd64] http://deb.debian.org/debian sid main'
-                  key_url: 'https://ftp-master.debian.org/keys/release-12.asc'
+                  key_url: 'https://ftp-master.debian.org/keys/archive-key-12.asc'
+                # Importamos la clave anterior (Debian 10/Buster Archive Key) para compatibilidad
+                - sourceline: 'deb [arch=amd64] http://deb.debian.org/debian sid main'
+                  key_url: 'https://ftp-master.debian.org/keys/archive-key-10.asc'
               include:
                 - carburetor
                 - python3
@@ -62,7 +66,6 @@ jobs:
 
       - name: Build AppImage
         run: |
-          # Usamos extract-and-run para evitar problemas de permisos en el runner
           ./appimage-builder-1.1.0-x86_64.AppImage --appimage-extract-and-run --recipe AppImageBuilder.yml
 
       - name: Upload Artifact
