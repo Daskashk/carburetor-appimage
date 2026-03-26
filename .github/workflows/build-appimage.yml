@@ -31,15 +31,6 @@ jobs:
           # HACK 2: Convertir la llave binaria del sistema a ASCII (necesario para evitar error 'unsupported filetype')
           gpg --keyring /usr/share/keyrings/debian-archive-keyring.gpg --export --armor > /tmp/debian-archive-key.asc
 
-      - name: Download Official Carburetor Deb
-        run: |
-          wget -q "https://framagit.org/-/project/67091/uploads/35726bec322917933fa728781c0ece30/carburetor_5.1.1-1_all.deb" -O carburetor.deb
-
-      - name: Install appimage-builder
-        run: |
-          wget -q https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
-          chmod +x appimage-builder-1.1.0-x86_64.AppImage
-
       - name: Create AppImage Recipe
         run: |
           cat <<EOF > AppImageBuilder.yml
@@ -60,10 +51,10 @@ jobs:
               arch: amd64
               sources:
                 - sourceline: 'deb http://deb.debian.org/debian sid main'
-                  # Apuntamos a la llave ASCII que acabamos de crear
                   key_url: 'file:///tmp/debian-archive-key.asc'
               include:
-                - ./carburetor.deb
+                # CAMBIO IMPORTANTE: Usar el nombre real del archivo
+                - ./carburetor_5.1.1-1_all.deb
                 - python3
                 - python3-gi
                 - python3-pycountry
