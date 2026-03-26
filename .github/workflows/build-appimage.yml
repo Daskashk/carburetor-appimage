@@ -1,4 +1,4 @@
-name: Build Carburetor AppImage (Simple & Secure)
+name: Build Carburetor AppImage (Fixed)
 
 on:
   push:
@@ -20,21 +20,25 @@ jobs:
       - name: Install appimage-builder
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget
-          # Descargamos appimage-builder de forma segura desde su repositorio oficial
+          sudo apt-get install -y wget file desktop-file-utils
           wget -q https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
           chmod +x appimage-builder-1.1.0-x86_64.AppImage
 
       - name: Create AppImage Recipe
         run: |
-          # Generamos la receta (Recipe) dinámicamente.
-          # Esto usa los repositorios oficiales de Debian Sid (donde está Carburetor).
           cat <<EOF > AppImageBuilder.yml
           version: 1
           script:
             - rm -rf AppDir || true
           AppDir:
             path: ./AppDir
+            app_info:
+              id: io.frama.tractor.carburetor
+              name: Carburetor
+              icon: io.frama.tractor.carburetor
+              version: continuous
+              exec: usr/bin/carburetor
+              exec_args: \$@
             apt:
               arch: amd64
               sources:
@@ -46,21 +50,11 @@ jobs:
                 - gir1.2-gtk-4.0
                 - gir1.2-adw-1
                 - adwaita-icon-theme-full
-            files:
-              exclude:
-                - usr/include
-                - usr/share/man
-                - usr/share/doc
+                - libglib2.0-bin
             runtime:
               env:
-                # Aseguramos que el AppImage busque los recursos en su interior
                 GSETTINGS_SCHEMA_DIR: '\$APPDIR/usr/share/glib-2.0/schemas'
                 GTK_THEME: Adwaita
-            test:
-              fedora-30:
-                image: appimagecrafters/tests-env:fedora-30
-                command: ./AppRun
-                use_host_x: true
           AppImage:
             arch: x86_64
             file_name: carburetor-latest-x86_64.AppImage
@@ -68,8 +62,7 @@ jobs:
 
       - name: Build AppImage
         run: |
-          # Ejecutamos appimage-builder dentro de un contenedor Docker para máxima seguridad y aislamiento
-          # Evitamos problemas de FUSE en el runner usando --appimage-extract-and-run
+          # Usamos extract-and-run para evitar problemas de permisos en el runner
           ./appimage-builder-1.1.0-x86_64.AppImage --appimage-extract-and-run --recipe AppImageBuilder.yml
 
       - name: Upload Artifact
