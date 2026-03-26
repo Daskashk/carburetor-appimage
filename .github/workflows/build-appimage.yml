@@ -1,4 +1,4 @@
-name: Build Carburetor AppImage (Fixed Container)
+name: Build Carburetor AppImage (Key Fix)
 
 on:
   push:
@@ -19,16 +19,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install System Dependencies & Fix apt-key
+      - name: Install System Dependencies & Prepare Keys
         run: |
           apt-get update
-          # Instalamos dependencias necesarias
           apt-get install -y wget file desktop-file-utils gnupg curl ca-certificates
           
-          # HACK: appimage-builder exige 'apt-key' que ya no existe en Debian Sid.
-          # Descargamos el script antiguo de Ubuntu (que funciona perfectamente) para satisfacer la herramienta.
+          # HACK 1: Restaurar apt-key (necesario para appimage-builder)
           curl -sL "https://git.launchpad.net/ubuntu/+source/apt/plain/cmdline/apt-key?h=ubuntu/jammy" -o /usr/bin/apt-key
           chmod +x /usr/bin/apt-key
+
+          # HACK 2: Convertir la llave binaria del sistema a ASCII (necesario para evitar error 'unsupported filetype')
+          gpg --keyring /usr/share/keyrings/debian-archive-keyring.gpg --export --armor > /tmp/debian-archive-key.asc
 
       - name: Download Official Carburetor Deb
         run: |
@@ -59,8 +60,8 @@ jobs:
               arch: amd64
               sources:
                 - sourceline: 'deb http://deb.debian.org/debian sid main'
-                  # Usamos la llave local del contenedor Debian Sid (100% compatible)
-                  key_url: 'file:///usr/share/keyrings/debian-archive-keyring.gpg'
+                  # Apuntamos a la llave ASCII que acabamos de crear
+                  key_url: 'file:///tmp/debian-archive-key.asc'
               include:
                 - ./carburetor.deb
                 - python3
@@ -96,7 +97,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: github.ref == 'refs/heads/main'
         with:
-          name: "Carburetor 5.1.1 (Secure Build)"
+          name: "Carburetor 5.1.1"
           tag_name: v5.1.1-appimage
           prerelease: false
           files: carburetor-5.1.1-x86_64.AppImage
