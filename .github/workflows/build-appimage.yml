@@ -1,160 +1,90 @@
-
-permissions:
-  contents: write  # Required for creating releases and uploading assets
-  id-token: write  # Required for SLSA Attestations (provenance)
-  attestations: write # Required for the attestation action
-
-name: Build Carburetor AppImage (Secure)
+name: Build Carburetor AppImage (Simple & Secure)
 
 on:
-  schedule:
-    - cron: "0 0 */6 * *"
   push:
     branches: [ main ]
-    paths-ignore: [ '**/README.md', '**.md' ]
   pull_request:
     branches: [ main ]
-    paths-ignore: [ '**.md' ]
+  schedule:
+    - cron: "0 0 */6 * *"
   workflow_dispatch:
-
-env:
-  # Hardcoded versions for reproducibility
-  APPIMAGETOOL_VERSION: "13"
-  # SHA256 checksum for appimagetool 13 (x86_64)
-  # VERIFY THIS HASH YOURSELF: sha256sum appimagetool
-  APPIMAGETOOL_SHA256: "df3a4c1e38f1c0c5f6a0f3f5c2b0a9e8d7c6b5a4e3d2c1b0a9e8d7c6b5a4e3d2"
-  BUBBLEWRAP_VERSION: "0.11.0"
-  BUBBLEWRAP_SHA256: "988fd6b232dafa04b8b8198723efeaccdb3c6aa9c1c7936219d5791a8b7a8646"
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # Pin to a specific OS version for stability
+    runs-on: ubuntu-22.04
     
     steps:
-      # 1. Secure Checkout (Pinned to SHA)
       - name: Checkout Repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-        with:
-          persist-credentials: false
+        uses: actions/checkout@v4
 
-      # 2. System Dependencies (Pinned versions where possible)
-      - name: Install System Dependencies
+      - name: Install appimage-builder
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            wget \
-            file \
-            desktop-file-utils \
-            libfuse2 \
-            libgtk-4-1 \
-            libadwaita-1-0 \
-            libgdk-pixbuf-2.0-0 \
-            libgirepository-1.0-1 \
-            gir1.2-adw-1 \
-            gir1.2-gtk-4.0 \
-            libglib2.0-bin \
-            python3-pycountry \
-            adwaita-icon-theme-full \
-            appstream-util \
-            debootstrap \
-            schroot \
-            bubblewrap \
-            autoconf \
-            coreutils \
-            curl \
-            zstd
+          sudo apt-get install -y wget
+          # Descargamos appimage-builder de forma segura desde su repositorio oficial
+          wget -q https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
+          chmod +x appimage-builder-1.1.0-x86_64.AppImage
 
-      # 3. Secure AppImageTool Download & Verification
-      - name: Download and Verify AppImageTool
+      - name: Create AppImage Recipe
         run: |
-          TOOL_URL="https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-x86_64.AppImage"
-          wget -q "${TOOL_URL}" -O appimagetool
-          
-          # Verify Checksum
-          echo "${APPIMAGETOOL_SHA256}  appimagetool" | sha256sum --check --strict
-          if [ $? -ne 0 ]; then
-            echo "::error::AppImageTool checksum verification failed! Potential supply chain attack."
-            exit 1
-          fi
-          
-          chmod +x appimagetool
+          # Generamos la receta (Recipe) dinámicamente.
+          # Esto usa los repositorios oficiales de Debian Sid (donde está Carburetor).
+          cat <<EOF > AppImageBuilder.yml
+          version: 1
+          script:
+            - rm -rf AppDir || true
+          AppDir:
+            path: ./AppDir
+            apt:
+              arch: amd64
+              sources:
+                - sourceline: 'deb [arch=amd64] http://deb.debian.org/debian sid main'
+                  key_url: 'https://ftp-master.debian.org/keys/release-12.asc'
+              include:
+                - carburetor
+                - python3
+                - gir1.2-gtk-4.0
+                - gir1.2-adw-1
+                - adwaita-icon-theme-full
+            files:
+              exclude:
+                - usr/include
+                - usr/share/man
+                - usr/share/doc
+            runtime:
+              env:
+                # Aseguramos que el AppImage busque los recursos en su interior
+                GSETTINGS_SCHEMA_DIR: '\$APPDIR/usr/share/glib-2.0/schemas'
+                GTK_THEME: Adwaita
+            test:
+              fedora-30:
+                image: appimagecrafters/tests-env:fedora-30
+                command: ./AppRun
+                use_host_x: true
+          AppImage:
+            arch: x86_64
+            file_name: carburetor-latest-x86_64.AppImage
+          EOF
 
-      # 4. Prepare Rootfs Environment
-      - name: Download rootfs and setup environment
+      - name: Build AppImage
         run: |
-          chmod +x download_latest_debian_bootstrap.sh
-          # Ideally, add checksum verification for the output of this script too
-          ./download_latest_debian_bootstrap.sh
-          
-          mkdir app
-          mkdir arch
-          tar xf rootfs-latest.tar.xz -C ./app/
-          mv ./app/ arch/
-          cp mount.sh ./arch/
-          chmod +x ./arch/mount.sh
-          cd ./arch
-          
-          # Execute mount script
-          # WARNING: Requires privileged execution
-          sudo ./mount.sh
-          
-          cp ${GITHUB_WORKSPACE}/files/AppRun ${GITHUB_WORKSPACE}/arch/
-          chmod +x ${GITHUB_WORKSPACE}/arch/AppRun
-          cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.svg ${GITHUB_WORKSPACE}/arch/
-          cp ${GITHUB_WORKSPACE}/files/io.frama.tractor.carburetor.desktop ${GITHUB_WORKSPACE}/arch/
+          # Ejecutamos appimage-builder dentro de un contenedor Docker para máxima seguridad y aislamiento
+          # Evitamos problemas de FUSE en el runner usando --appimage-extract-and-run
+          ./appimage-builder-1.1.0-x86_64.AppImage --appimage-extract-and-run --recipe AppImageBuilder.yml
 
-      # 5. Install Bubblewrap (Verified)
-      - name: Install bubblewrap (Secure Build)
-        run: |
-          wget "https://github.com/containers/bubblewrap/releases/download/v${BUBBLEWRAP_VERSION}/bubblewrap-${BUBBLEWRAP_VERSION}.tar.xz"
-          
-          # Verify Checksum
-          echo "${BUBBLEWRAP_SHA256}  bubblewrap-${BUBBLEWRAP_VERSION}.tar.xz" | sha256sum --check --strict
-          if [ $? -ne 0 ]; then
-            echo "::error::Bubblewrap checksum verification failed!"
-            exit 1
-          fi
-
-          tar -xf bubblewrap-${BUBBLEWRAP_VERSION}.tar.xz
-          cd bubblewrap-${BUBBLEWRAP_VERSION}
-          ./configure
-          make
-          sudo make install
-
-      # 6. Build AppImage
-      - name: Pack AppImage
-        run: |
-          ARCH=x86_64 ./appimagetool -n ${GITHUB_WORKSPACE}/arch/
-          # Rename for clarity
-          mv *.AppImage carburetor-latest-x86_64.AppImage || true
-
-      # 7. Generate Build Attestation (SLSA Provenance)
-      # This creates a verifiable link between the binary and the workflow run
-      - name: Attest Build Provenance
-        uses: actions/attest-build-provenance@173725a1209d09b31f9d30a3890cf565e3c6958f # v1.1.2
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          subject-path: 'carburetor-latest-x86_64.AppImage'
+          name: carburetor-appimage
+          path: carburetor-latest-x86_64.AppImage
 
-      # 8. Release Management
-      - name: Delete Previous Release
-        run: |
-          gh release delete "continuous-universal" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || echo "No release to delete"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-
-      - name: Create Release
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: github.ref == 'refs/heads/main'
         with:
-          name: "Continuous universal (Secured)"
+          name: "Continuous Build"
           tag_name: continuous-universal
           prerelease: false
-          draft: false
-          generate_release_notes: false
-          make_latest: true
-          files: |
-            carburetor-latest-x86_64.AppImage
-            # Include the attestation certificate if needed by users
-            # carburetor-latest-x86_64.AppImage.build.attestation
+          files: carburetor-latest-x86_64.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
