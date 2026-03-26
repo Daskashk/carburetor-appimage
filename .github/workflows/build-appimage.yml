@@ -1,4 +1,4 @@
-name: Build Carburetor AppImage (Fixed Keys)
+name: Build Carburetor AppImage (From Official Deb)
 
 on:
   push:
@@ -11,16 +11,27 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-    
+    # Usamos Debian Sid en un contenedor para asegurar compatibilidad total con el .deb
+    runs-on: ubuntu-latest
+    container:
+      image: debian:sid
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Install System Dependencies
+        run: |
+          apt-get update
+          apt-get install -y wget file desktop-file-utils ca-certificates
+
+      - name: Download Official Carburetor Deb
+        run: |
+          # Descargamos el .deb oficial que proporcionaste
+          wget -q "https://framagit.org/-/project/67091/uploads/35726bec322917933fa728781c0ece30/carburetor_5.1.1-1_all.deb" -O carburetor.deb
+
       - name: Install appimage-builder
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget file desktop-file-utils
           wget -q https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
           chmod +x appimage-builder-1.1.0-x86_64.AppImage
 
@@ -30,57 +41,66 @@ jobs:
           version: 1
           script:
             - rm -rf AppDir || true
+            - mkdir -p AppDir
           AppDir:
             path: ./AppDir
             app_info:
               id: io.frama.tractor.carburetor
               name: Carburetor
               icon: io.frama.tractor.carburetor
-              version: continuous
-              exec: usr/bin/carburetor
-              exec_args: \$@
+              version: 5.1.1
+              # Apuntamos al ejecutable python real
+              exec: usr/bin/python3
+              # Le decimos que ejecute carburetor
+              exec_args: \$APPDIR/usr/bin/carburetor
+            
             apt:
               arch: amd64
               sources:
-                # Importamos la clave actual (Debian 12/Bookworm Archive Key)
-                - sourceline: 'deb [arch=amd64] http://deb.debian.org/debian sid main'
-                  key_url: 'https://ftp-master.debian.org/keys/archive-key-12.asc'
-                # Importamos la clave anterior (Debian 10/Buster Archive Key) para compatibilidad
-                - sourceline: 'deb [arch=amd64] http://deb.debian.org/debian sid main'
-                  key_url: 'https://ftp-master.debian.org/keys/archive-key-10.asc'
+                # Usamos los repositorios de Debian Sid (ya que el .deb es de testing/sid)
+                # Al estar dentro del contenedor debian:sid, las claves GPG ya están instaladas y son válidas.
+                - sourceline: 'deb http://deb.debian.org/debian sid main'
               include:
-                - carburetor
+                # Incluimos el .deb descargado localmente
+                - ./carburetor.deb
+                # Dependencias necesarias (Python + GTK + Backend)
                 - python3
+                - python3-gi
+                - python3-pycountry
                 - gir1.2-gtk-4.0
                 - gir1.2-adw-1
+                - libadwaita-1-0
                 - adwaita-icon-theme-full
-                - libglib2.0-bin
+                - tractor
+                - tor
             runtime:
               env:
-                GSETTINGS_SCHEMA_DIR: '\$APPDIR/usr/share/glib-2.0/schemas'
+                PYTHONPATH: \$APPDIR/usr/lib/python3/dist-packages:\$PYTHONPATH
+                GSETTINGS_SCHEMA_DIR: \$APPDIR/usr/share/glib-2.0/schemas
                 GTK_THEME: Adwaita
           AppImage:
             arch: x86_64
-            file_name: carburetor-latest-x86_64.AppImage
+            file_name: carburetor-5.1.1-x86_64.AppImage
           EOF
 
       - name: Build AppImage
         run: |
+          # Ejecutamos dentro del entorno del contenedor
           ./appimage-builder-1.1.0-x86_64.AppImage --appimage-extract-and-run --recipe AppImageBuilder.yml
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: carburetor-appimage
-          path: carburetor-latest-x86_64.AppImage
+          path: carburetor-5.1.1-x86_64.AppImage
 
       - name: Release
         uses: softprops/action-gh-release@v1
         if: github.ref == 'refs/heads/main'
         with:
-          name: "Continuous Build"
-          tag_name: continuous-universal
+          name: "Carburetor 5.1.1 (Official Build)"
+          tag_name: v5.1.1-appimage
           prerelease: false
-          files: carburetor-latest-x86_64.AppImage
+          files: carburetor-5.1.1-x86_64.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
