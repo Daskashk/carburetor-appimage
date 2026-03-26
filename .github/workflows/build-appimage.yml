@@ -1,4 +1,4 @@
-name: Build Carburetor AppImage (From Official Deb)
+name: Build Carburetor AppImage (Fixed Container)
 
 on:
   push:
@@ -11,7 +11,6 @@ on:
 
 jobs:
   build:
-    # Usamos Debian Sid en un contenedor para asegurar compatibilidad total con el .deb
     runs-on: ubuntu-latest
     container:
       image: debian:sid
@@ -20,14 +19,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install System Dependencies
+      - name: Install System Dependencies & Fix apt-key
         run: |
           apt-get update
-          apt-get install -y wget file desktop-file-utils ca-certificates
+          # Instalamos dependencias necesarias
+          apt-get install -y wget file desktop-file-utils gnupg curl ca-certificates
+          
+          # HACK: appimage-builder exige 'apt-key' que ya no existe en Debian Sid.
+          # Descargamos el script antiguo de Ubuntu (que funciona perfectamente) para satisfacer la herramienta.
+          curl -sL "https://git.launchpad.net/ubuntu/+source/apt/plain/cmdline/apt-key?h=ubuntu/jammy" -o /usr/bin/apt-key
+          chmod +x /usr/bin/apt-key
 
       - name: Download Official Carburetor Deb
         run: |
-          # Descargamos el .deb oficial que proporcionaste
           wget -q "https://framagit.org/-/project/67091/uploads/35726bec322917933fa728781c0ece30/carburetor_5.1.1-1_all.deb" -O carburetor.deb
 
       - name: Install appimage-builder
@@ -49,21 +53,16 @@ jobs:
               name: Carburetor
               icon: io.frama.tractor.carburetor
               version: 5.1.1
-              # Apuntamos al ejecutable python real
               exec: usr/bin/python3
-              # Le decimos que ejecute carburetor
               exec_args: \$APPDIR/usr/bin/carburetor
-            
             apt:
               arch: amd64
               sources:
-                # Usamos los repositorios de Debian Sid (ya que el .deb es de testing/sid)
-                # Al estar dentro del contenedor debian:sid, las claves GPG ya están instaladas y son válidas.
                 - sourceline: 'deb http://deb.debian.org/debian sid main'
+                  # Usamos la llave local del contenedor Debian Sid (100% compatible)
+                  key_url: 'file:///usr/share/keyrings/debian-archive-keyring.gpg'
               include:
-                # Incluimos el .deb descargado localmente
                 - ./carburetor.deb
-                # Dependencias necesarias (Python + GTK + Backend)
                 - python3
                 - python3-gi
                 - python3-pycountry
@@ -85,7 +84,6 @@ jobs:
 
       - name: Build AppImage
         run: |
-          # Ejecutamos dentro del entorno del contenedor
           ./appimage-builder-1.1.0-x86_64.AppImage --appimage-extract-and-run --recipe AppImageBuilder.yml
 
       - name: Upload Artifact
@@ -98,7 +96,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: github.ref == 'refs/heads/main'
         with:
-          name: "Carburetor 5.1.1 (Official Build)"
+          name: "Carburetor 5.1.1 (Secure Build)"
           tag_name: v5.1.1-appimage
           prerelease: false
           files: carburetor-5.1.1-x86_64.AppImage
